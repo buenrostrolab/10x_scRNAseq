@@ -24,6 +24,7 @@ d <- yoloHandleMake(rD, cD, lookupFileName = sqlite, lookupTableName = sample)
 
 ns <- seq(10000,60000,10000)
 time1 <- sapply(ns, function(n){
+  print(n)
   s <- sample(1:dim(d)[2],n)
   m <- d[,s]
   ptm <- proc.time()
