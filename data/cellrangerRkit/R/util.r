@@ -111,7 +111,7 @@ load_cellranger_matrix <- function(pipestance_path=NULL, genome=NULL, barcode_fi
 #' @param barcode_filtered If true, get the path to the barcode filtered matrices; else to the raw filtered matrices
 #' @return The path to the matrices directory
 get_matrix_dir_path <- function(pipestance_path, barcode_filtered) {
-  file.path(pipestance_path, 'outs',
+  file.path(pipestance_path, 'outz',
             ifelse(barcode_filtered, 'filtered_gene_bc_matrices', 'raw_gene_bc_matrices'))
 }
 
@@ -139,7 +139,7 @@ get_genomes_in_matrix_dir <- function(pipestance_path, barcode_filtered) {
 #' @param pipestance_path Path to the output directory produced by the Cell Ranger pipeline
 #' @return Path to the summary CSV
 get_summary_csv_path <- function(pipestance_path) {
-  file.path(pipestance_path, 'outs', 'metrics_summary.csv')
+  file.path(pipestance_path, 'outz', 'metrics_summary.csv')
 }
 
 #' Load metrics summary from the Cell Ranger pipeline
@@ -176,7 +176,7 @@ load_molecule_info <- function(gbm) {
   if(! "bit64" %in% installed.packages())
     stop("Suggested package bit64 is required to use load_molecule_info. Please install and try again.")
 
-  h5_path <- file.path(gbm@pipestance_path, "outs", "molecule_info.h5")
+  h5_path <- file.path(gbm@pipestance_path, "outz", "molecule_info.h5")
   required_cols <- c("barcode", "gem_group", "gene", "umi", "reads")
   cols <- h5ls(h5_path)$name
   for (col in required_cols) {
@@ -541,13 +541,13 @@ get_mean_mapped_reads_per_cell <- function(gbm) {
 #' plot(analysis$tsne$TSNE.1, analysis$tsne$TSNE.2, col=analysis$kmeans[["2_clusters"]]$Cluster)
 #' }
 load_cellranger_analysis_results <- function(pipestance_path) {
-  kmeans_dir <- file.path(pipestance_path, 'outs', 'analysis', 'kmeans')
+  kmeans_dir <- file.path(pipestance_path, 'outz', 'analysis', 'kmeans')
   kmeans_result_names <- dir(kmeans_dir)
   kmeans_results <- lapply(kmeans_result_names, function(x) read.csv(file.path(kmeans_dir, x, 'clusters.csv')))
   names(kmeans_results) <- kmeans_result_names
 
-  return(list(pca=read.csv(file.path(pipestance_path, 'outs', 'analysis', 'pca', 'projection.csv')),
-              tsne=read.csv(file.path(pipestance_path, 'outs', 'analysis', 'tsne', 'projection.csv')),
+  return(list(pca=read.csv(file.path(pipestance_path, 'outz', 'analysis', 'pca', 'projection.csv')),
+              tsne=read.csv(file.path(pipestance_path, 'outz', 'analysis', 'tsne', 'projection.csv')),
               kmeans=kmeans_results
   ))
 }
@@ -604,7 +604,7 @@ download_sample <- function(sample_name, sample_dir, host, lite=TRUE) {
   header <- paste(host,sample_name,"/",sample_name,"_",sep="")
 
   # create outs directory
-  outs_dir <- file.path(sample_dir,"outs")
+  outs_dir <- file.path(sample_dir,"outz")
   if (!is.na(file.info(outs_dir)$isdir)) {
     if (file.info(outs_dir)$isdir) {
       unlink(outs_dir, recursive = TRUE)
@@ -618,7 +618,7 @@ download_sample <- function(sample_name, sample_dir, host, lite=TRUE) {
   # download csv file
   # e.g., "https://s3-us-west-2.amazonaws.com/10x.files/samples/cell/pbmc3k/pbmc3k_metrics_summary.csv"
   summary_csv_file <- paste(header,"metrics_summary.csv",sep="")
-  download.file(summary_csv_file,destfile=file.path(outs_dir,"metrics_summary.csv"))
+  download.file(summary_csv_file,destfile=file.path(outs_dir,"metrics_summary.csv"), cacheOK = FALSE)
   if (!file.exists(file.path(outs_dir,"metrics_summary.csv"))) {
     stop(paste('Failed to download metrics_summary.csv. to ',outs_dir))
   }
@@ -627,7 +627,7 @@ download_sample <- function(sample_name, sample_dir, host, lite=TRUE) {
   # e.g., "https://s3-us-west-2.amazonaws.com/10x.files/samples/cell/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz"
   filtered_gene_bc_matrices_folder <- paste(header,"filtered_gene_bc_matrices.tar.gz",sep="")
   download.file(filtered_gene_bc_matrices_folder,
-                destfile=file.path(outs_dir,"filtered_gene_bc_matrices.tar.gz"))
+                destfile=file.path(outs_dir,"filtered_gene_bc_matrices.tar.gz"), cacheOK = FALSE)
   if (!file.exists(file.path(outs_dir,"filtered_gene_bc_matrices.tar.gz"))) {
     stop(paste('Failed to download filtered_gene_bc_matrices.tar.gz to ',outs_dir))
   }
@@ -645,7 +645,7 @@ download_sample <- function(sample_name, sample_dir, host, lite=TRUE) {
   # download cluster analysis file
   # e.g., "https://s3-us-west-2.amazonaws.com/10x.files/samples/cell/pbmc3k/pbmc3k_analysis.tar.gz"
   analysis_folder <- paste(header,"analysis.tar.gz",sep="")
-  download.file(analysis_folder,destfile=file.path(outs_dir,"analysis.tar.gz"))
+  download.file(analysis_folder,destfile=file.path(outs_dir,"analysis.tar.gz"), cacheOK = FALSE)
   if (!file.exists(file.path(outs_dir,"analysis.tar.gz"))) {
     stop(paste('Failed to download analysis.tar.gz. in ',outs_dir))
   }
@@ -664,7 +664,7 @@ download_sample <- function(sample_name, sample_dir, host, lite=TRUE) {
     # download molecule information (optional if no sample merging is required) *warning* this is slow!
     # e.g., "https://s3-us-west-2.amazonaws.com/10x.files/samples/cell/pbmc3k/pbmc3k_molecule_info.h5"
     molecule_info <- paste(header,"molecule_info.h5",sep="")
-    download.file(molecule_info,destfile=file.path(outs_dir,"molecule_info.h5"),quiet = TRUE)
+    download.file(molecule_info,destfile=file.path(outs_dir,"molecule_info.h5"),quiet = TRUE, cacheOK = FALSE)
     if (!file.exists(file.path(outs_dir,"molecule_info.h5"))) {
       stop(paste('Failed to download molecule_info.h5 to ',outs_dir))
     }
