@@ -24,17 +24,18 @@ yhMake <- function(sample){
 }
 
 #samples <- c("aml027_post_transplant","aml027_pre_transplant")
-samples <- c("aml035_post_transplant","aml035_pre_transplant","b_cells","cd4_t_helper",
-  "cd14_monocytes","cd34","cd56_nk","cytotoxic_t",
-  "jurkat_293t_99_1", "jurkat_293t_50_50", "jurkat","memory_t",
-  "naive_cytotoxic","naive_t","regulatory_t","t293", "pbmc3k", "pbmc6k")
+samples <- c("cd14_monocytes",
+  "jurkat_293t_99_1", "jurkat_293t_50_50", "jurkat",
+  "t293")
 
 oall <- Reduce('+', lapply(samples, yhMake))
 class <- as.character(colData(oall)$lookupTableName)
 aa <- assay(getvalues(oall), 1)
 print(dim(aa))
+ab <- sweep(aa, 2, Matrix::colSums(aa), FUN="/") * 1000000
+ac <- sparseMatrix(i=summary(ab)$i, j=summary(ab)$j, x=log2(summary(ab)$x + 1))
 
-pr <- prcomp_irlba(aa, n = 10)
+pr <- prcomp_irlba(ac, n = 10)
 X <- abs(pr$rotation)
 
 library(largeVis)
@@ -55,9 +56,9 @@ system.time({
 cd <- data.frame(scale(t(coords)), class)
 names(cd) <- c("x", "y", "class")
 
-saveRDS(cd, file = "../data/largeviscoords.rds")
+saveRDS(cd, file = "../data/fourPlot.rds")
 
-cd <- readRDS("../data/largeviscoords.rds")
+cd <- readRDS("../data/fourPlot.rds")
 
 ggplot(cd[sample(nrow(cd)),], aes( x = x,  y = y, color = class)) +
   geom_point() + theme_bw()

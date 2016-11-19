@@ -51,11 +51,11 @@ regpred <- predict(mr, data.frame(ncells = vals))
 #dfappend <- rbind(setNames(data.frame(vals, "regular", regpred), nv), setNames(data.frame(vals, "yolo", yolopred),nv))
 dfappend <- setNames(data.frame(vals, "regular", regpred), nv)
                   
-ggplot(rbind(mdf,dfappend), aes(x=ncells, y=value, color = variable)) + geom_line() + theme_bw()+ labs(title = "scRNA-Seq Data Size", 
+ggplot(rbind(mdf[mdf$variable == "regular",],dfappend), aes(x=ncells, y=value, color = variable)) + geom_line() + theme_bw()+ labs(title = "scRNA-Seq Data Size", 
     x = "Number of Cells", y = "RAM Requirements (Megabytes)") +
   scale_x_continuous(trans = "log2", breaks = c(1000, 10000, 100000, 1000000) ) + 
   scale_y_continuous(trans = "log2", breaks =  c(100, 1000, 10000, 10000)) +
-  geom_point(data=mdf,aes(x=ncells,y=value, colour = variable))+labs(colour = "Data Type") +
+  geom_point(data=mdf[mdf$variable == "regular",],aes(x=ncells,y=value, colour = variable))+labs(colour = "Data Type") +
   #geom_segment(aes(x = 100000, y = 7000, xend = 1000000, yend = 6312), arrow = arrow(length = unit(0.05, "npc")), colour = "black") +
   annotate("text", x = 300000, y = 6000, label = "~ 6.3 Gb", size = 7) +
   geom_point(data=data.frame(x = 1000000, y = 6312),aes(x,y),colour="black",size=2)
